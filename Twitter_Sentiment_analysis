@@ -1,0 +1,73 @@
+import sys, tweepy
+from textblob import TextBlob
+import matplotlib.pyplot as plt
+
+
+def percentage(part,whole):
+    return 100 * float(part)/ float(whole)
+
+consumer_key= "your_consumer_key_here"
+consumer_secret = "your_consumer_secret_key_here"
+access_token = "your_access_token_here"
+access_token_secret = "your_access_token_secret_here"
+auth = tweepy.OAuthHandler(consumer_key,consumer_secret)
+auth.set_access_token(access_token,access_token_secret)
+api = tweepy.API(auth, wait_on_rate_limit=True)
+
+search_term = str(input("Enter Keyword/Hashtag to search about: "))
+no_of_search_term = int(input("Enter how many tweets to analyze: "))
+
+tweets = tweepy.Cursor(api.search, q=search_term).items(no_of_search_term)
+
+positive = 0
+negative = 0
+neutral = 0
+polarity = 0
+
+
+for tweet in tweets:
+    #print(tweet.text)
+    analysis = TextBlob(tweet.text)
+    polarity += analysis.sentiment.polarity
+
+    if(analysis.sentiment.polarity ==0):
+        neutral += 1
+    elif (analysis.sentiment.polarity < 0.00):
+        negative += 1
+    elif (analysis.sentiment.polarity > 0.00):
+        positive += 1
+
+
+positive = percentage(positive,no_of_search_term)
+negative = percentage(negative,no_of_search_term)
+neutral = percentage(neutral,no_of_search_term)
+polarity = percentage(polarity,no_of_search_term)
+
+
+positive = format(positive, ".2f")
+negative = format(negative, ".2f")
+neutral = format(neutral, ".2f")
+
+print("How people reacting on " + search_term + " by analizing " + str(no_of_search_term) + " tweets.")
+
+if polarity ==0:
+    print("Neutral")
+
+elif polarity < 0.00:
+    print("Negative")
+
+elif polarity > 0.00:
+    print("Positive")
+
+labels = ["positive ["+str(positive)+"%]", "neutral ["+str(neutral)+"%]", "negative ["+str(negative)+"%]"]
+sizes = [positive,neutral,negative]
+colors = ["yellowgreen","gold","red"]
+patches, text = plt.pie(sizes,colors=colors,startangle=90)
+plt.legend(patches,labels,loc="best")
+plt.title("How people reacting on " + search_term + " by analizing " + str(no_of_search_term) + " tweets.")
+plt.axis("equal")
+plt.tight_layout()
+plt.show()
+
+
+
